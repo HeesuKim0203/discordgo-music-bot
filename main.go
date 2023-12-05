@@ -1,50 +1,16 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
-
-	"github.com/bwmarrin/discordgo"
+	//"app"
 )
-
-var (
-	Token string
-)
-
-func init() {
-	flag.StringVar(&Token, "t", "", "")
-	flag.Parse()
-}
-
-func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
-
-	if m.Author.ID == s.State.User.ID {
-		return
-	}
-
-	if m.Content == "ping" {
-		s.ChannelMessageSend(m.ChannelID, "Pong!")
-	}
-
-	if m.Content == "pong" {
-		s.ChannelMessageSend(m.ChannelID, "Ping!")
-	}
-}
 
 func main() {
-	discord, err := discordgo.New("Bot " + "MTE3OTk3MjUxNDQ5NjExODg0NA.GZZULB.jyzu4tH0Mbm02UHI2BEMp2Dvqq6MDQsSNYyji0")
 
-	if err != nil {
-		fmt.Println("discord Create Error : ")
-		panic(err)
-	}
-
-	discord.AddHandler(messageCreate)
-
-	discord.Identify.Intents = discordgo.IntentsGuildMessages
+	discord := NewDiscord()
 
 	err = discord.Open()
 	if err != nil {
