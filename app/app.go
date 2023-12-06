@@ -1,22 +1,12 @@
 package app
 
 import (
-	"flag"
 	"fmt"
 	"os"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/joho/godotenv"
 )
-
-var (
-	Token string
-)
-
-func init() {
-	flag.StringVar(&Token, "t", "", "")
-	flag.Parse()
-}
 
 func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
@@ -34,8 +24,12 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 }
 
 func NewDiscord() *discordgo.Session {
-
 	err := godotenv.Load(".env")
+
+	if err != nil {
+		fmt.Println("Not Found env :")
+		panic(err)
+	}
 
 	discord, err := discordgo.New("Bot " + os.Getenv("PUBLIC_KEY"))
 
