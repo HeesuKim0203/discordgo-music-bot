@@ -24,7 +24,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 }
 
 func NewDiscord() *discordgo.Session {
-	err := godotenv.Load(".env")
+	err := godotenv.Load()
 
 	if err != nil {
 		fmt.Println("Not Found env :")
