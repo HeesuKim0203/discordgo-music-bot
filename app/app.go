@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/bwmarrin/discordgo"
@@ -27,7 +28,7 @@ func NewDiscord() *discordgo.Session {
 	err := godotenv.Load()
 
 	if err != nil {
-		fmt.Println("Not Found env :")
+		fmt.Println("Not Found env : ")
 		panic(err)
 	}
 
@@ -38,9 +39,12 @@ func NewDiscord() *discordgo.Session {
 		panic(err)
 	}
 
-	discord.AddHandler(messageCreate)
+	// Logging Server
+	discord.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
+		log.Printf("Logged in as: %v#%v", s.State.User.Username, s.State.User.Discriminator)
+	})
 
-	discord.Identify.Intents = discordgo.IntentsGuildMessages
+	discord.AddHandler(messageCreate)
 
 	return discord
 }

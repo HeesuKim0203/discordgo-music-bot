@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"os/signal"
-	"syscall"
 
 	"github.com/lets-go-bot/app"
 )
@@ -19,9 +19,13 @@ func main() {
 		panic(err)
 	}
 
-	sc := make(chan os.Signal, 1)
-	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
-	<-sc
+	registeredCommands := app.RegisterCommends(discord)
 
-	discord.Close()
+	defer app.UnRegister(discord, registeredCommands)
+	defer discord.Close()
+
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt)
+	log.Println("Press Ctrl+C to exit")
+	<-stop
 }
