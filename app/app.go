@@ -4,10 +4,14 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/joho/godotenv"
+	"github.com/lets-go-bot/app/youtube"
 )
+
+var y = youtube.NewService()
 
 func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
@@ -15,12 +19,25 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
-	if m.Content == "ping" {
-		s.ChannelMessageSend(m.ChannelID, "Pong!")
+	content := strings.Split(m.Content, " ")
+
+	if content[0] != "!letsgobot" {
+		return
 	}
 
-	if m.Content == "pong" {
-		s.ChannelMessageSend(m.ChannelID, "Ping!")
+	if content[1] != "" {
+
+		text := ""
+		searchData := y.SearchHandle(content[1], 15)
+
+		for _, item := range searchData.Items {
+			title := item.Snippet.Title
+			videoId := item.Id.VideoId
+
+			text += "Title: " + title + ", Video ID: " + videoId + "\n"
+		}
+
+		s.ChannelMessageSend(m.ChannelID, text)
 	}
 }
 

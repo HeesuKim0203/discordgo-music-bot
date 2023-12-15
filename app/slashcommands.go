@@ -20,6 +20,12 @@ var (
 			DefaultMemberPermissions: &defaultMemberPermissions,
 			DMPermission:             &dmPermission,
 		},
+		{
+			Name:                     "search-song",
+			Description:              "search song",
+			DefaultMemberPermissions: &defaultMemberPermissions,
+			DMPermission:             &dmPermission,
+		},
 	}
 
 	commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
@@ -37,6 +43,9 @@ var (
 					},
 				})
 			}
+		},
+		"search-song": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+
 		},
 	}
 )
