@@ -32,7 +32,7 @@ func NewDiscord() *discordgo.Session {
 		panic(err)
 	}
 
-	discord, err := discordgo.New("Bot " + os.Getenv("PUBLIC_KEY"))
+	discord, err := discordgo.New("Bot " + os.Getenv("DISCORD_PUBLIC_KEY"))
 
 	if err != nil {
 		fmt.Println("discord Create Error : ")
