@@ -27,12 +27,17 @@ var (
 
 	commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
 		"basic-command": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+
+			//log.Println(i.ChannelID, i.GuildID)
+
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
 				Data: &discordgo.InteractionResponseData{
 					Content: "Hey there! Congratulations, you just executed your first slash command",
 				},
 			})
+
+			//s.ChannelVoiceJoin("")
 		},
 	}
 )
@@ -47,8 +52,6 @@ func RegisterCommends(discord *discordgo.Session) []*discordgo.ApplicationComman
 
 	registeredCommands := make([]*discordgo.ApplicationCommand, len(commands))
 	for i, v := range commands {
-
-		log.Println("i, v", i, v)
 
 		cmd, err := discord.ApplicationCommandCreate(discord.State.User.ID, GuildID, v)
 		if err != nil {
