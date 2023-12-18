@@ -21,8 +21,6 @@ func main() {
 
 	registeredCommands := app.RegisterCommends(discord)
 
-	log.Println(registeredCommands)
-
 	defer app.UnRegister(discord, registeredCommands)
 	defer discord.Close()
 
