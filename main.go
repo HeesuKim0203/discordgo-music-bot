@@ -19,9 +19,9 @@ func main() {
 		panic(err)
 	}
 
-	registeredCommands := app.RegisterCommends(discord)
+	// registeredCommands := app.RegisterCommends(discord)
 
-	defer app.UnRegister(discord, registeredCommands)
+	// defer app.UnRegister(discord, registeredCommands)
 	defer discord.Close()
 
 	stop := make(chan os.Signal, 1)

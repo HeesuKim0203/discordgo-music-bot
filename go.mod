@@ -5,7 +5,6 @@ go 1.21.4
 require (
 	github.com/bwmarrin/discordgo v0.27.1
 	github.com/joho/godotenv v1.5.1
-	github.com/jonas747/dca v0.0.0-20210930103944-155f5e5f0cc7
 	github.com/kkdai/youtube/v2 v2.9.0
 	github.com/stretchr/testify v1.8.4
 	google.golang.org/api v0.154.0
@@ -30,7 +29,7 @@ require (
 	github.com/googleapis/enterprise-certificate-proxy v0.3.2 // indirect
 	github.com/googleapis/gax-go/v2 v2.12.0 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
-	github.com/jonas747/ogg v0.0.0-20161220051205-b4f6f4cf3757 // indirect
+	github.com/jonas747/ogg v0.0.0-20161220051205-b4f6f4cf3757
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.46.1 // indirect

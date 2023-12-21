@@ -11,7 +11,6 @@ var (
 	GuildID                        = ""
 	dmPermission                   = false
 	defaultMemberPermissions int64 = discordgo.PermissionManageServer
-	//integerOptionMinValue          = 1.0
 
 	commands = []*discordgo.ApplicationCommand{
 		{
