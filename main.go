@@ -6,7 +6,7 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/lets-go-bot/app"
+	"github.com/discordgo-music-bot/app"
 )
 
 func main() {

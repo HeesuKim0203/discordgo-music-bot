@@ -5,13 +5,13 @@ import (
 	"io"
 	"log"
 	"os"
-	"os/exec"
 	"strings"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/discordgo-music-bot/dca"
+	"github.com/discordgo-music-bot/youtube"
 	"github.com/joho/godotenv"
-	"github.com/lets-go-bot/youtube"
 
 	you "github.com/kkdai/youtube/v2"
 )
@@ -35,10 +35,10 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 		vc, _ := s.ChannelVoiceJoin(m.GuildID, m.ChannelID, false, false)
 
+		vc.Speaking(true)
+
 		search = content[2]
 		client := you.Client{}
-
-		log.Println(search)
 
 		video, err := client.GetVideo(search)
 		if err != nil {
@@ -65,50 +65,34 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			panic(err)
 		}
 
-		cmd := exec.Command("ffmpeg", "-i", "./video.mp4", "-f", "s16le", "-ar", "48000", "-ac", "2", "-")
+		options := dca.StdEncodeOptions
+		options.BufferedFrames = 100
+		options.FrameDuration = 20
+		options.CompressionLevel = 5
+		options.Bitrate = 96
 
-		stdout, err := cmd.StdoutPipe()
+		encodeSession, err := dca.EncodeFile("./video.mp4", options)
 		if err != nil {
-			log.Println("Error creating audio pipe:", err)
+			log.Printf("[%s] Failed to create encoding session for \"%s\": %s", s.State.User.Username, "./video.mp4", err.Error())
 			return
 		}
+		defer encodeSession.Cleanup()
 
-		err = cmd.Start()
-		if err != nil {
-			log.Println("Error starting ffmpeg:", err)
-			return
-		}
+		time.Sleep(500 * time.Millisecond)
 
-		vc.Speaking(true)
-		defer vc.Speaking(false)
+		done := make(chan error)
+		dca.NewStream(encodeSession, vc, done)
 
-		buf := make([]byte, 2048)
-		for {
-			select {
-			case <-time.After(250 * time.Millisecond):
-				_, err := stdout.Read(buf)
-				if err != nil {
-					log.Println("Error reading audio data:", err)
-					return
-				}
-				vc.OpusSend <- buf
+		select {
+		case err := <-done:
+			if err != nil && err != io.EOF {
+				log.Printf("[%s] Error occurred during stream for \"%s\": %s", s.State.User.Username, "./video.mp4", err.Error())
+				return
 			}
 		}
 
-		//buf := make([]byte, 2048)
-
-		// for {
-		// 	select {
-		// 	case <-time.After(250 * time.Millisecond):
-		// 		_, err := stream.Read(buf)
-		// 		log.Println(buf)
-		// 		if err != nil {
-		// 			log.Println("Error reading audio data:", err)
-		// 			return
-		// 		}
-		// 		vc.OpusSend <- buf
-		// 	}
-		// }
+		_ = encodeSession.Stop()
+		return
 	}
 
 	if content[1] != "" {

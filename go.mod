@@ -1,4 +1,4 @@
-module github.com/lets-go-bot
+module github.com/discordgo-music-bot
 
 go 1.21.4
 
