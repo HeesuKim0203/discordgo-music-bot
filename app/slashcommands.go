@@ -9,9 +9,9 @@ import (
 var (
 	RemoveCommands                 = true
 	GuildID                        = ""
-	integerOptionMinValue          = 1.0
 	dmPermission                   = false
 	defaultMemberPermissions int64 = discordgo.PermissionManageServer
+	//integerOptionMinValue          = 1.0
 
 	commands = []*discordgo.ApplicationCommand{
 		{
@@ -20,12 +20,12 @@ var (
 			DefaultMemberPermissions: &defaultMemberPermissions,
 			DMPermission:             &dmPermission,
 		},
-		{
-			Name:                     "search-song",
-			Description:              "search song",
-			DefaultMemberPermissions: &defaultMemberPermissions,
-			DMPermission:             &dmPermission,
-		},
+		// {
+		// 	Name:                     "play-song",
+		// 	Description:              "play song",
+		// 	DefaultMemberPermissions: &defaultMemberPermissions,
+		// 	DMPermission:             &dmPermission,
+		// },
 	}
 
 	commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
@@ -44,9 +44,9 @@ var (
 				})
 			}
 		},
-		"search-song": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+		// "search-song": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
-		},
+		// },
 	}
 )
 
