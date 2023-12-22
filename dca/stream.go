@@ -61,7 +61,6 @@ func (s *StreamingSession) stream() {
 		s.Lock()
 		if s.paused {
 			s.Unlock()
-			log.Println("paused")
 			return
 		}
 		s.Unlock()
@@ -70,11 +69,9 @@ func (s *StreamingSession) stream() {
 			s.Lock()
 			s.finished = true
 			if err != io.EOF {
-				log.Println("err")
 				s.err = err
 			}
 			if s.done != nil {
-				log.Println("s.done")
 				go func() {
 					s.done <- err
 				}()
@@ -88,7 +85,6 @@ func (s *StreamingSession) stream() {
 func (s *StreamingSession) readNext() error {
 	opus, err := s.source.OpusFrame()
 	if err != nil {
-		log.Println("OpusFrame err")
 		return err
 	}
 	timeout := time.After(time.Second)
