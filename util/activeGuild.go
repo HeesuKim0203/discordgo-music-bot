@@ -1,11 +1,7 @@
 package util
 
 import (
-	"fmt"
-	"os"
-	"strconv"
-
-	"github.com/joho/godotenv"
+	"github.com/discordgo-music-bot/config"
 )
 
 type ActiveGuild struct {
@@ -17,24 +13,11 @@ type ActiveGuild struct {
 
 func (ag *ActiveGuild) NewActiveGuild(id string) *ActiveGuild {
 
-	err := godotenv.Load()
+	config := config.GetConfig()
 
-	if err != nil {
-		fmt.Println("Not Found env : ")
-		panic(err)
-	}
+	maxSize := config.GetQueueSize()
 
-	maxSize, err := strconv.Atoi(os.Getenv("MUSIC_QUEUE_SIZE"))
-
-	if err != nil {
-		fmt.Println("Failed convert string -> number : ")
-		panic(err)
-	}
-
-	newEvnet := &Event{
-		StopEvent: make(chan bool, 1),
-		SkipEvent: make(chan bool, 1),
-	}
+	newEvnet := NewEvent()
 
 	return &ActiveGuild{
 		id:          id,
@@ -44,21 +27,23 @@ func (ag *ActiveGuild) NewActiveGuild(id string) *ActiveGuild {
 	}
 }
 
-func (ag *ActiveGuild) GetMusicQueueSize() int {
-	return len(ag.musicQue)
-}
-
 func (ag *ActiveGuild) MusicQueueIsFulling() bool {
 	return len(ag.musicQue) == cap(ag.musicQue)
+}
+
+func (ag *ActiveGuild) CleanUp() {
+	close(ag.musicQue)
+	ag.isStreaming = false
+	ag.event = nil
+	ag.musicQue = nil
 }
 
 func (ag *ActiveGuild) CheckExistenceMusicQueue() bool {
 	return !(len(ag.musicQue) == 0)
 }
 
-func (ag *ActiveGuild) SetStreamingState(isStreaming bool) bool {
-	ag.isStreaming = isStreaming
-	return ag.isStreaming
+func (ag *ActiveGuild) GetMusicQueueSize() int {
+	return len(ag.musicQue)
 }
 
 func (ag *ActiveGuild) GetStreamingState(isStreaming bool) bool {
@@ -73,9 +58,7 @@ func (ag *ActiveGuild) GetEvent() *Event {
 	return ag.event
 }
 
-func (ag *ActiveGuild) CleanUp() {
-	close(ag.musicQue)
-	ag.isStreaming = false
-	ag.event = nil
-	ag.musicQue = nil
+func (ag *ActiveGuild) SetStreamingState(isStreaming bool) bool {
+	ag.isStreaming = isStreaming
+	return ag.isStreaming
 }

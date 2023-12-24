@@ -7,22 +7,25 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/discordgo-music-bot/dca"
-	you "github.com/kkdai/youtube/v2"
+	"github.com/discordgo-music-bot/youtube"
+	ytDownload "github.com/kkdai/youtube/v2"
 )
+
+var y = youtube.NewService()
 
 func Play(s *discordgo.Session, m *discordgo.MessageCreate, youtubeId string) {
 	vc, _ := s.ChannelVoiceJoin(m.GuildID, m.ChannelID, false, false)
+	defer vc.Disconnect()
 
 	vc.Speaking(true)
 	defer vc.Speaking(false)
 
-	client := you.Client{}
+	client := ytDownload.Client{}
 	video, err := client.GetVideo(youtubeId)
 	if err != nil {
 		log.Println("Error getting video info:", err)
 		return
 	}
-	defer vc.Disconnect()
 
 	// Get Stream
 	formats := video.Formats.WithAudioChannels().FindByQuality("medium")
@@ -66,7 +69,7 @@ func Play(s *discordgo.Session, m *discordgo.MessageCreate, youtubeId string) {
 func Search(s *discordgo.Session, m *discordgo.MessageCreate, youtubeSearchText string) {
 
 	text := ""
-	searchData := y.SearchHandle(youtubeSearchText, 5)
+	searchData := y.SearchHandle(youtubeSearchText)
 
 	for _, item := range searchData.Items {
 		title := item.Snippet.Title
@@ -79,4 +82,20 @@ func Search(s *discordgo.Session, m *discordgo.MessageCreate, youtubeSearchText 
 
 	s.ChannelMessageSend(m.ChannelID, text)
 
+}
+
+func Add(s *discordgo.Session, m *discordgo.MessageCreate, addMusicId string) {
+	text := ""
+	searchData := y.SearchToIdHandle(addMusicId)
+
+	for _, item := range searchData.Items {
+		title := item.Snippet.Title
+		videoId := item.Id.VideoId
+
+		text += "Title: " + title + "\n"
+		text += "Video ID: " + videoId + "\n"
+		text += "Video URL: " + "https://www.youtube.com/watch?v=" + videoId + "\n\n"
+	}
+
+	s.ChannelMessageSend(m.ChannelID, text)
 }
