@@ -3,15 +3,16 @@ package app
 import (
 	"fmt"
 	"log"
-	"os"
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/discordgo-music-bot/youtube"
-	"github.com/joho/godotenv"
+	"github.com/discordgo-music-bot/config"
 )
 
-var y = youtube.NewService()
+var (
+	c       = config.GetConfig()
+	botName = c.GetBotName()
+)
 
 func messageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 
@@ -21,7 +22,7 @@ func messageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	content := strings.Split(m.Content, " ")
 
-	if content[0] != "!letsgobot" {
+	if content[0] != botName {
 		return
 	}
 
@@ -29,12 +30,15 @@ func messageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 	case "play":
 		Play(s, m, content[2])
 		return
+	case "add":
+		return
 	case "search":
 		searchText := ""
 		for _, v := range content[2:] {
 			searchText += v
 		}
 		Search(s, m, searchText)
+		return
 	default:
 		s.ChannelMessageSend(m.ChannelID, "Not Found Command!")
 		return
@@ -42,14 +46,8 @@ func messageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 }
 
 func NewDiscord() *discordgo.Session {
-	err := godotenv.Load()
 
-	if err != nil {
-		fmt.Println("Not Found env : ")
-		panic(err)
-	}
-
-	discord, err := discordgo.New("Bot " + os.Getenv("DISCORD_PUBLIC_KEY"))
+	discord, err := discordgo.New("Bot " + c.GetDiscordToken())
 
 	if err != nil {
 		fmt.Println("discord Create Error : ")

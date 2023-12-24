@@ -1,11 +1,7 @@
 package util
 
 import (
-	"fmt"
-	"os"
-	"strconv"
-
-	"github.com/joho/godotenv"
+	"github.com/discordgo-music-bot/config"
 )
 
 type ActiveGuild struct {
@@ -17,19 +13,9 @@ type ActiveGuild struct {
 
 func (ag *ActiveGuild) NewActiveGuild(id string) *ActiveGuild {
 
-	err := godotenv.Load()
+	config := config.GetConfig()
 
-	if err != nil {
-		fmt.Println("Not Found env : ")
-		panic(err)
-	}
-
-	maxSize, err := strconv.Atoi(os.Getenv("MUSIC_QUEUE_SIZE"))
-
-	if err != nil {
-		fmt.Println("Failed convert string -> number : ")
-		panic(err)
-	}
+	maxSize := config.GetQueueSize()
 
 	newEvnet := NewEvent()
 
