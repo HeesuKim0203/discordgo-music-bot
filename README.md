@@ -1,4 +1,4 @@
-# Let's Go bot
+# Music bot
 
 Discord Bot Using Go
 
