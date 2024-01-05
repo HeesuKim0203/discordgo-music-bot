@@ -12,7 +12,7 @@ type Music struct {
 	duration  time.Duration // Music Duration
 }
 
-func NewMedia(title string, id string, StreamUrl string, durationSeconds int) *Music {
+func NewMusic(title string, id string, StreamUrl string, durationSeconds int) *Music {
 	duration, _ := time.ParseDuration(fmt.Sprintf("%ds", durationSeconds))
 	return &Music{
 		title:     title,

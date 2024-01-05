@@ -2,43 +2,54 @@ package app
 
 import (
 	"github.com/bwmarrin/discordgo"
+	"github.com/discordgo-music-bot/util"
 	"github.com/discordgo-music-bot/youtube"
 )
 
-type Command struct {
-	id      string                                             // Command text
-	handler func(*discordgo.Session, *discordgo.MessageCreate) // Command handler
-}
+const (
+	Search = "search"
+	Play   = "play"
+	Delete = "delete"
+	Stop   = "stop"
+	Skip   = "skip"
+	Add    = "add"
+	View   = "view"
+)
 
 type CommandHandler struct {
-	youtube       *youtube.YoutubeServiceHandler
-	searchText    string
-	addMusicId    string
-	deleteMusicId string
-	commands      *map[string]Command
+	youtube  *youtube.YoutubeServiceHandler
+	Commands map[string]string // Command text
 }
 
-func (h *CommandHandler) setSearchText(searchText string) {
-	h.searchText = searchText
+func NewCommandHandler() *CommandHandler {
+
+	commands := make(map[string]string)
+
+	commands[Search] = Search
+	commands[Play] = Play
+	commands[Delete] = Delete
+	commands[Stop] = Stop
+	commands[Skip] = Skip
+	commands[View] = View
+	commands[Add] = Add
+
+	commandHandler := &CommandHandler{
+		youtube:  youtube.NewService(),
+		Commands: commands,
+	}
+
+	return commandHandler
 }
 
-func (h *CommandHandler) setAddMusicId(musicId string) {
-	h.addMusicId = musicId
-}
+func (h *CommandHandler) SearchMusic(s *discordgo.Session, m *discordgo.MessageCreate, searchText string) {
 
-func (h *CommandHandler) setDeleteMusicId(musicId string) {
-	h.deleteMusicId = musicId
-}
-
-func (h *CommandHandler) searchMusic(s *discordgo.Session, m *discordgo.MessageCreate) {
-
-	if h.searchText == "" {
+	if searchText == "" {
 		s.ChannelMessageSend(m.ChannelID, "No text. Please enter text.")
 		return
 	}
 
 	text := ""
-	searchData := h.youtube.SearchHandle(h.searchText)
+	searchData := h.youtube.SearchHandle(searchText)
 
 	for _, item := range searchData.Items {
 		title := item.Snippet.Title
@@ -50,45 +61,48 @@ func (h *CommandHandler) searchMusic(s *discordgo.Session, m *discordgo.MessageC
 	}
 
 	s.ChannelMessageSend(m.ChannelID, text)
-	h.searchText = ""
-
 }
 
-func (h *CommandHandler) addMusic(s *discordgo.Session, m *discordgo.MessageCreate) {
+func (h *CommandHandler) AddMusic(s *discordgo.Session, m *discordgo.MessageCreate, ag *util.ActiveGuild, musicId string) {
 
-	if h.addMusicId == "" {
+	if musicId == "" {
 		s.ChannelMessageSend(m.ChannelID, "No text. Please enter text.")
 		return
 	}
 
 	text := ""
-	searchData := h.youtube.SearchToIdHandle(h.addMusicId)
+	//searchData := h.youtube.SearchToIdHandle(musicId)
 
-	// Todo : Not found search data!
+	// Todo : Not found search data exception
 
 	s.ChannelMessageSend(m.ChannelID, text)
-	h.addMusicId = ""
 }
 
-func (h *CommandHandler) deleteMusic(s *discordgo.Session, m *discordgo.MessageCreate) {
+func (h *CommandHandler) DeleteMusic(s *discordgo.Session, m *discordgo.MessageCreate, ag *util.ActiveGuild, musicId string) {
 
-	if h.deleteMusicId == "" {
+	if musicId == "" {
 		s.ChannelMessageSend(m.ChannelID, "No text. Please enter text.")
 		return
 	}
 
 	text := ""
-	searchData := h.youtube.SearchToIdHandle(h.deleteMusicId)
+	//searchData := h.youtube.SearchToIdHandle(musicId)
 
-	// Todo : Not found search data!
+	// Todo : Not found search data exception
 
 	s.ChannelMessageSend(m.ChannelID, text)
-	h.deleteMusicId = ""
 }
 
-func (h *CommandHandler) Play(s *discordgo.Session, m *discordgo.MessageCreate) {
-	// vc, _ := s.ChannelVoiceJoin(m.GuildID, m.ChannelID, false, false)
-	// defer vc.Disconnect()
+func (h *CommandHandler) PlayMusic(s *discordgo.Session, m *discordgo.MessageCreate, ag *util.ActiveGuild) {
+
+	vc, err := s.ChannelVoiceJoin(m.GuildID, m.ChannelID, false, false)
+
+	if err != nil {
+		s.ChannelMessageSend(m.ChannelID, "Voice is not available. Please try on a channel where voice chat is available.")
+		return
+	}
+
+	defer vc.Disconnect()
 
 	// vc.Speaking(true)
 	// defer vc.Speaking(false)
