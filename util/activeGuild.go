@@ -11,7 +11,7 @@ type ActiveGuild struct {
 	isStreaming bool        // State Streaming
 }
 
-func (ag *ActiveGuild) NewActiveGuild(id string) *ActiveGuild {
+func NewActiveGuild(id string) *ActiveGuild {
 
 	config := config.GetConfig()
 
