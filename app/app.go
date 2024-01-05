@@ -26,23 +26,23 @@ func messageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
-	switch content[1] {
-	case "play":
-		Play(s, m, content[2])
-		return
-	case "add":
-		return
-	case "search":
-		searchText := ""
-		for _, v := range content[2:] {
-			searchText += v
-		}
-		Search(s, m, searchText)
-		return
-	default:
-		s.ChannelMessageSend(m.ChannelID, "Not Found Command!")
-		return
-	}
+	// switch content[1] {
+	// case "play":
+	// 	Play(s, m, content[2])
+	// 	return
+	// case "add":
+	// 	return
+	// case "search":
+	// 	searchText := ""
+	// 	for _, v := range content[2:] {
+	// 		searchText += v
+	// 	}
+	// 	Search(s, m, searchText)
+	// 	return
+	// default:
+	// 	s.ChannelMessageSend(m.ChannelID, "Not Found Command!")
+	// 	return
+	// }
 }
 
 func NewDiscord() *discordgo.Session {
