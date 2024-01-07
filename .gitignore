@@ -1,6 +1,5 @@
 .env
-
 /main
 /video.mp4
-
 .DS_Store
+.LICENSE
