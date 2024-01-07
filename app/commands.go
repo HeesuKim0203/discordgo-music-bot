@@ -9,11 +9,11 @@ import (
 const (
 	Search = "search"
 	Play   = "play"
-	Delete = "delete"
-	Stop   = "stop"
-	Skip   = "skip"
-	Add    = "add"
-	View   = "view"
+	//Delete = "delete"
+	Stop = "stop"
+	Skip = "skip"
+	Add  = "add"
+	View = "view"
 )
 
 type CommandHandler struct {
@@ -27,7 +27,7 @@ func NewCommandHandler() *CommandHandler {
 
 	commands[Search] = Search
 	commands[Play] = Play
-	commands[Delete] = Delete
+	//commands[Delete] = Delete
 	commands[Stop] = Stop
 	commands[Skip] = Skip
 	commands[View] = View
@@ -71,27 +71,38 @@ func (h *CommandHandler) AddMusic(s *discordgo.Session, m *discordgo.MessageCrea
 	}
 
 	text := ""
-	//searchData := h.youtube.SearchToIdHandle(musicId)
+	data, err := h.youtube.SearchToIdHandle(musicId)
 
-	// Todo : Not found search data exception
-
-	s.ChannelMessageSend(m.ChannelID, text)
-}
-
-func (h *CommandHandler) DeleteMusic(s *discordgo.Session, m *discordgo.MessageCreate, ag *util.ActiveGuild, musicId string) {
-
-	if musicId == "" {
-		s.ChannelMessageSend(m.ChannelID, "No text. Please enter text.")
+	if err != nil {
+		s.ChannelMessageSend(m.ChannelID, "Please enter a valid ID. Search failed.")
 		return
 	}
 
-	text := ""
-	//searchData := h.youtube.SearchToIdHandle(musicId)
+	music := util.NewMusic(data[0].Snippet.Title, data[0].Id.VideoId, "https://www.youtube.com/watch?v="+data[0].Id.VideoId)
 
-	// Todo : Not found search data exception
+	ag.EnqueueMedia(music)
+
+	title := music.GetTitle()
+	videoId := music.GetId()
+
+	text += "Title: " + title + "\n"
+	text += "Video ID: " + videoId + "\n The video has been added."
 
 	s.ChannelMessageSend(m.ChannelID, text)
 }
+
+// func (h *CommandHandler) DeleteMusic(s *discordgo.Session, m *discordgo.MessageCreate, ag *util.ActiveGuild, musicId string) {
+
+// 	if musicId == "" {
+// 		s.ChannelMessageSend(m.ChannelID, "No text. Please enter text.")
+// 		return
+// 	}
+
+// 	text := ""
+// 	//searchData := h.youtube.SearchToIdHandle(musicId)
+
+// 	s.ChannelMessageSend(m.ChannelID, text)
+// }
 
 func (h *CommandHandler) PlayMusic(s *discordgo.Session, m *discordgo.MessageCreate, ag *util.ActiveGuild) {
 

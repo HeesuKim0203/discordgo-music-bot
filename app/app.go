@@ -38,29 +38,33 @@ func messageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
-	//activeGuild := checkGuild(s, m)
+	activeGuild := checkGuild(s, m)
 
 	content := strings.Split(m.Content, " ")
 
-	if content[0] != botName {
+	if !strings.EqualFold(content[0], botName) {
 		return
 	}
 
-	switch content[1] {
-	case commandHandler.Commands[Play]:
+	switch {
+	case strings.EqualFold(content[1], commandHandler.Commands[Play]):
 		// Play(s, m, content[2])
 		return
-	case commandHandler.Commands[Add]:
+	case strings.EqualFold(content[1], commandHandler.Commands[Add]):
+		commandHandler.AddMusic(s, m, activeGuild, content[2])
 		return
-	case commandHandler.Commands[Delete]:
+	// case strings.EqualFold(content[1], commandHandler.Commands[Delete]):
+	// 	commandHandler.DeleteMusic(s, m, activeGuild, content[2])
+	// 	return
+	case strings.EqualFold(content[1], commandHandler.Commands[View]):
 		return
-	case commandHandler.Commands[View]:
+	case strings.EqualFold(content[1], commandHandler.Commands[Stop]):
+		activeGuild.GetEvent().Stop()
 		return
-	case commandHandler.Commands[Stop]:
+	case strings.EqualFold(content[1], commandHandler.Commands[Skip]):
+		activeGuild.GetEvent().Skip()
 		return
-	case commandHandler.Commands[Skip]:
-		return
-	case commandHandler.Commands[Search]:
+	case strings.EqualFold(content[1], commandHandler.Commands[Search]):
 		searchText := ""
 		for _, v := range content[2:] {
 			searchText += v

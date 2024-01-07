@@ -3,6 +3,8 @@ package util
 import (
 	"fmt"
 	"time"
+
+	"github.com/discordgo-music-bot/config"
 )
 
 type Music struct {
@@ -12,8 +14,10 @@ type Music struct {
 	duration  time.Duration // Music Duration
 }
 
-func NewMusic(title string, id string, StreamUrl string, durationSeconds int) *Music {
-	duration, _ := time.ParseDuration(fmt.Sprintf("%ds", durationSeconds))
+var c = config.GetConfig()
+
+func NewMusic(title string, id string, StreamUrl string) *Music {
+	duration, _ := time.ParseDuration(fmt.Sprintf("%ds", c.GetMusicDuration()))
 	return &Music{
 		title:     title,
 		id:        id,
