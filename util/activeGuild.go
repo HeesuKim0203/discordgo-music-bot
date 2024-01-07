@@ -4,6 +4,7 @@ import (
 	"github.com/discordgo-music-bot/config"
 )
 
+// Todo : Queue Channel -> Array
 type ActiveGuild struct {
 	id          string      // Guild Id
 	musicQue    chan *Music // Music Queue
@@ -61,4 +62,8 @@ func (ag *ActiveGuild) GetEvent() *Event {
 func (ag *ActiveGuild) SetStreamingState(isStreaming bool) bool {
 	ag.isStreaming = isStreaming
 	return ag.isStreaming
+}
+
+func (g *ActiveGuild) EnqueueMedia(music *Music) {
+	g.musicQue <- music
 }
