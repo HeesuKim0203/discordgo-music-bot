@@ -9,11 +9,10 @@ import (
 const (
 	Search = "search"
 	Play   = "play"
-	//Delete = "delete"
-	Stop = "stop"
-	Skip = "skip"
-	Add  = "add"
-	View = "view"
+	Stop   = "stop"
+	Skip   = "skip"
+	Add    = "add"
+	View   = "view"
 )
 
 type CommandHandler struct {
@@ -27,7 +26,6 @@ func NewCommandHandler() *CommandHandler {
 
 	commands[Search] = Search
 	commands[Play] = Play
-	//commands[Delete] = Delete
 	commands[Stop] = Stop
 	commands[Skip] = Skip
 	commands[View] = View
@@ -91,18 +89,13 @@ func (h *CommandHandler) AddMusic(s *discordgo.Session, m *discordgo.MessageCrea
 	s.ChannelMessageSend(m.ChannelID, text)
 }
 
-// func (h *CommandHandler) DeleteMusic(s *discordgo.Session, m *discordgo.MessageCreate, ag *util.ActiveGuild, musicId string) {
+func (h *CommandHandler) StopMusic(s *discordgo.Session, m *discordgo.MessageCreate, ag *util.ActiveGuild) {
+	ag.GetEvent().Stop()
+}
 
-// 	if musicId == "" {
-// 		s.ChannelMessageSend(m.ChannelID, "No text. Please enter text.")
-// 		return
-// 	}
-
-// 	text := ""
-// 	//searchData := h.youtube.SearchToIdHandle(musicId)
-
-// 	s.ChannelMessageSend(m.ChannelID, text)
-// }
+func (h *CommandHandler) SkipMusic(s *discordgo.Session, m *discordgo.MessageCreate, ag *util.ActiveGuild) {
+	ag.GetEvent().Skip()
+}
 
 func (h *CommandHandler) PlayMusic(s *discordgo.Session, m *discordgo.MessageCreate, ag *util.ActiveGuild) {
 

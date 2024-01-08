@@ -53,16 +53,13 @@ func messageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 	case strings.EqualFold(content[1], commandHandler.Commands[Add]):
 		commandHandler.AddMusic(s, m, activeGuild, content[2])
 		return
-	// case strings.EqualFold(content[1], commandHandler.Commands[Delete]):
-	// 	commandHandler.DeleteMusic(s, m, activeGuild, content[2])
-	// 	return
 	case strings.EqualFold(content[1], commandHandler.Commands[View]):
 		return
 	case strings.EqualFold(content[1], commandHandler.Commands[Stop]):
-		activeGuild.GetEvent().Stop()
+		commandHandler.StopMusic(s, m, activeGuild)
 		return
 	case strings.EqualFold(content[1], commandHandler.Commands[Skip]):
-		activeGuild.GetEvent().Skip()
+		commandHandler.SkipMusic(s, m, activeGuild)
 		return
 	case strings.EqualFold(content[1], commandHandler.Commands[Search]):
 		searchText := ""
