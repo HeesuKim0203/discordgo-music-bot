@@ -31,7 +31,7 @@ func (y *YoutubeServiceHandler) SearchHandle(search string) *youtube.SearchListR
 	return searchResponse
 }
 
-func (y *YoutubeServiceHandler) SearchToIdHandle(searchId string) ([]*youtube.SearchResult, error) {
+func (y *YoutubeServiceHandler) SearchToIdOrURLHandle(searchId string) ([]*youtube.SearchResult, error) {
 
 	searchResponse, err := y.service.Search.List(y.options).Q(searchId).Type("video").MaxResults(1).Do()
 
