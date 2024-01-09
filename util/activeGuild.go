@@ -72,6 +72,12 @@ func (ag *ActiveGuild) DeleteMusic(num int) []*Music {
 	return ag.music
 }
 
+func (ag *ActiveGuild) PreparStreaming() {
+	for _, item := range ag.music {
+		ag.musicChan <- item
+	}
+}
+
 func (ag *ActiveGuild) CleanUp() {
 	close(ag.musicChan)
 	ag.isStreaming = false

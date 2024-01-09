@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"strings"
-	"sync"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/discordgo-music-bot/config"
@@ -15,7 +14,6 @@ var (
 	c              = config.GetConfig()
 	botName        = c.GetBotName()
 	guilds         = make(map[string]*util.ActiveGuild)
-	guildsMutex    = sync.RWMutex{}
 	commandHandler = NewCommandHandler()
 	commands       = commandHandler.Commands
 )
