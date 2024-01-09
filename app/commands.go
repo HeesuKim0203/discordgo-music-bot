@@ -11,6 +11,7 @@ const (
 	Play   = "play"
 	Stop   = "stop"
 	Skip   = "skip"
+	Delete = "delete"
 	Add    = "add"
 	View   = "view"
 )
@@ -28,6 +29,7 @@ func NewCommandHandler() *CommandHandler {
 	commands[Play] = Play
 	commands[Stop] = Stop
 	commands[Skip] = Skip
+	commands[Delete] = Delete
 	commands[View] = View
 	commands[Add] = Add
 
@@ -39,7 +41,7 @@ func NewCommandHandler() *CommandHandler {
 	return commandHandler
 }
 
-func (h *CommandHandler) SearchMusic(s *discordgo.Session, m *discordgo.MessageCreate, searchText string) {
+func (h *CommandHandler) Search(s *discordgo.Session, m *discordgo.MessageCreate, searchText string) {
 
 	if searchText == "" {
 		s.ChannelMessageSend(m.ChannelID, "No text. Please enter text.")
@@ -61,7 +63,7 @@ func (h *CommandHandler) SearchMusic(s *discordgo.Session, m *discordgo.MessageC
 	s.ChannelMessageSend(m.ChannelID, text)
 }
 
-func (h *CommandHandler) AddMusic(s *discordgo.Session, m *discordgo.MessageCreate, ag *util.ActiveGuild, musicId string) {
+func (h *CommandHandler) Add(s *discordgo.Session, m *discordgo.MessageCreate, ag *util.ActiveGuild, musicId string) {
 
 	if musicId == "" {
 		s.ChannelMessageSend(m.ChannelID, "No text. Please enter text.")
@@ -69,7 +71,7 @@ func (h *CommandHandler) AddMusic(s *discordgo.Session, m *discordgo.MessageCrea
 	}
 
 	text := ""
-	data, err := h.youtube.SearchToIdHandle(musicId)
+	data, err := h.youtube.SearchToIdOrURLHandle(musicId)
 
 	if err != nil {
 		s.ChannelMessageSend(m.ChannelID, "Please enter a valid ID. Search failed.")
@@ -78,26 +80,76 @@ func (h *CommandHandler) AddMusic(s *discordgo.Session, m *discordgo.MessageCrea
 
 	music := util.NewMusic(data[0].Snippet.Title, data[0].Id.VideoId, "https://www.youtube.com/watch?v="+data[0].Id.VideoId)
 
-	ag.EnqueueMedia(music)
+	ag.AddMusic(music)
 
 	title := music.GetTitle()
 	videoId := music.GetId()
 
 	text += "Title: " + title + "\n"
-	text += "Video ID: " + videoId + "\n The video has been added."
+	text += "Video ID: " + videoId + "\n"
+	text += "Video URL: " + "https://www.youtube.com/watch?v=" + videoId + "\n\n" + "The video has been added."
 
 	s.ChannelMessageSend(m.ChannelID, text)
 }
 
-func (h *CommandHandler) StopMusic(s *discordgo.Session, m *discordgo.MessageCreate, ag *util.ActiveGuild) {
+func (h *CommandHandler) View(s *discordgo.Session, m *discordgo.MessageCreate, ag *util.ActiveGuild) {
+	text := ""
+	music := ag.GetMusic()
+
+	text += ":memo:Current Playlist\n\n"
+
+	for _, item := range music {
+		title := item.GetTitle()
+		videoId := item.GetId()
+
+		text += "Title: " + title + "\n"
+		text += "Video ID: " + videoId + "\n"
+	}
+
+	text += ":musical_notes:Playlist being played\n\n"
+	musicChan := ag.GetMusicChan()
+
+	for item := range musicChan {
+		title := item.GetTitle()
+		videoId := item.GetId()
+
+		text += "Title: " + title + "\n"
+		text += "Video ID: " + videoId + "\n"
+	}
+
+	// Todo : Embed text style update
+
+	s.ChannelMessageSend(m.ChannelID, text)
+
+}
+
+func (h *CommandHandler) Delete(s *discordgo.Session, m *discordgo.MessageCreate, ag *util.ActiveGuild, musicId string) {
+
+	music := ag.GetMusic()
+	findIndex := -1
+
+	for index, item := range music {
+		if item.GetId() == musicId {
+			findIndex = index
+		}
+	}
+
+	if findIndex == -1 {
+		return
+	}
+
+	ag.DeleteMusic(findIndex)
+}
+
+func (h *CommandHandler) Stop(s *discordgo.Session, m *discordgo.MessageCreate, ag *util.ActiveGuild) {
 	ag.GetEvent().Stop()
 }
 
-func (h *CommandHandler) SkipMusic(s *discordgo.Session, m *discordgo.MessageCreate, ag *util.ActiveGuild) {
+func (h *CommandHandler) Skip(s *discordgo.Session, m *discordgo.MessageCreate, ag *util.ActiveGuild) {
 	ag.GetEvent().Skip()
 }
 
-func (h *CommandHandler) PlayMusic(s *discordgo.Session, m *discordgo.MessageCreate, ag *util.ActiveGuild) {
+func (h *CommandHandler) Play(s *discordgo.Session, m *discordgo.MessageCreate, ag *util.ActiveGuild) {
 
 	vc, err := s.ChannelVoiceJoin(m.GuildID, m.ChannelID, false, false)
 
