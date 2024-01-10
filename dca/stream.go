@@ -54,7 +54,6 @@ func (s *StreamingSession) stream() {
 	defer func() {
 		s.Lock()
 		s.running = false
-		log.Println("paused")
 		s.Unlock()
 	}()
 	for {
