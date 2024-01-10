@@ -123,8 +123,6 @@ func (h *CommandHandler) View(s *discordgo.Session, m *discordgo.MessageCreate, 
 		text += "Video ID: " + videoId + "\n"
 	}
 
-	// Todo : Embed text style update
-
 	s.ChannelMessageSend(m.ChannelID, text)
 
 }
@@ -171,24 +169,42 @@ func (h *CommandHandler) Skip(s *discordgo.Session, m *discordgo.MessageCreate, 
 
 func (h *CommandHandler) StreamingPlayAndPrepar(s *discordgo.Session, m *discordgo.MessageCreate, ag *util.ActiveGuild) {
 
-	vc, err := s.ChannelVoiceJoin(m.GuildID, m.ChannelID, false, false)
-	defer vc.Disconnect()
-
+	vc, err := s.ChannelVoiceJoin(m.GuildID, m.ChannelID, false, true)
 	if err != nil {
-		s.ChannelMessageSend(m.ChannelID, "Voice is not available. Please try on a channel where voice chat is available.")
+		voiceJoinErr(s, m)
 		return
 	}
+	defer vc.Disconnect()
 
-	// Todo : Music Chan -> play function
-
-	vc.Speaking(true)
+	err = vc.Speaking(true)
+	if err != nil {
+		voiceJoinErr(s, m)
+		return
+	}
 	defer vc.Speaking(false)
+
+	musicChan := ag.PreparStreaming()
+
+	for item := range musicChan {
+		if !vc.Ready {
+			voiceJoinErr(s, m)
+			return
+		}
+
+		if ag.GetEvent().GetStopEvent() {
+
+		}
+
+		h.play(s, m, ag, vc, item)
+		// Music Delay
+		time.Sleep(time.Second)
+	}
 }
 
-func (h *CommandHandler) Play(s *discordgo.Session, m *discordgo.MessageCreate, vc *discordgo.VoiceConnection, youtubeId string) {
+func (h *CommandHandler) play(s *discordgo.Session, m *discordgo.MessageCreate, ag *util.ActiveGuild, vc *discordgo.VoiceConnection, music *util.Music) {
 
 	client := ytDownload.Client{}
-	video, err := client.GetVideo(youtubeId)
+	video, err := client.GetVideo(music.GetId())
 	defer video.delete()
 
 	if err != nil {
@@ -214,24 +230,28 @@ func (h *CommandHandler) Play(s *discordgo.Session, m *discordgo.MessageCreate, 
 	// Encode
 	encodeSession, err := dca.EncodeFile(stream, options)
 	if err != nil {
-		//log.Printf("[%s] Failed to create encoding session for \"%s\": %s", s.State.User.Username, "./video.mp4", err.Error())
 		return
 	}
 	defer encodeSession.Cleanup()
 
+	// Encode Session Delay
 	time.Sleep(500 * time.Millisecond)
 
 	done := make(chan error)
 	dca.NewStream(encodeSession, vc, done)
+	defer encodeSession.Stop()
 
+	// Todo : Session Code Debug
 	select {
 	case err := <-done:
 		if err != nil && err != io.EOF {
-			//log.Printf("[%s] Error occurred during stream for \"%s\": %s", s.State.User.Username, "./video.mp4", err.Error())
 			return
 		}
-		// Todo : Stop, Skip Event
+	case <-ag.GetEvent().GetSkipEvent():
+		return
+	case <-ag.GetEvent().GetStopEvent():
+		return
 	}
 
-	_ = encodeSession.Stop()
+	return
 }
