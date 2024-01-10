@@ -248,9 +248,9 @@ func (h *CommandHandler) play(s *discordgo.Session, m *discordgo.MessageCreate, 
 			return
 		}
 	case <-ag.GetEvent().GetSkipEvent():
-		return
+		encodeSession.Stop()
 	case <-ag.GetEvent().GetStopEvent():
-		return
+		encodeSession.Stop()
 	}
 
 	return
