@@ -5,11 +5,12 @@ import (
 )
 
 type ActiveGuild struct {
-	id          string      // Guild Id
-	music       []*Music    // Music Queue
-	musicChan   chan *Music // Music Chan
-	event       *Event      // Guild Event Management
-	isStreaming bool        // State Streaming
+	id          string   // Guild Id
+	music       []*Music // Music Current PlayList
+	playMusic   []*Music // Music Playing PlayList
+	event       *Event   // Guild Event Management
+	isStreaming bool     // State Streaming
+	maxSize     int
 }
 
 func NewActiveGuild(id string) *ActiveGuild {
@@ -18,35 +19,30 @@ func NewActiveGuild(id string) *ActiveGuild {
 
 	maxSize := config.GetQueueSize()
 
-	newEvnet := NewEvent()
+	event := NewEvent()
 
 	return &ActiveGuild{
 		id:          id,
-		music:       make([]*Music, maxSize),
-		musicChan:   make(chan *Music, maxSize),
 		isStreaming: false,
-		event:       newEvnet,
+		event:       event,
+		maxSize:     maxSize,
 	}
 }
 
-func (ag *ActiveGuild) MusicIsFulling() bool {
-	return len(ag.musicChan) == cap(ag.musicChan)
-}
-
 func (ag *ActiveGuild) CheckExistenceMusicQueue() bool {
-	return !(len(ag.musicChan) == 0)
+	return !(len(ag.playMusic) == 0)
 }
 
-func (ag *ActiveGuild) GetMusicChanSize() int {
-	return len(ag.musicChan)
+func (ag *ActiveGuild) GetPlayMusicSize() int {
+	return len(ag.playMusic)
 }
 
 func (ag *ActiveGuild) GetStreamingState(isStreaming bool) bool {
 	return ag.isStreaming
 }
 
-func (ag *ActiveGuild) GetMusicChan() chan *Music {
-	return ag.musicChan
+func (ag *ActiveGuild) GetPlayMusic() []*Music {
+	return ag.playMusic
 }
 
 func (ag *ActiveGuild) GetEvent() *Event {
@@ -63,6 +59,11 @@ func (ag *ActiveGuild) GetMusic() []*Music {
 }
 
 func (ag *ActiveGuild) AddMusic(music *Music) {
+
+	if len(ag.music) >= 10 {
+		return
+	}
+
 	ag.music = append(ag.music, music)
 }
 
@@ -72,17 +73,16 @@ func (ag *ActiveGuild) DeleteMusic(num int) []*Music {
 	return ag.music
 }
 
-func (ag *ActiveGuild) PreparStreaming() chan *Music {
-	for _, item := range ag.music {
-		ag.musicChan <- item
-	}
+func (ag *ActiveGuild) PreparStreaming() []*Music {
+	ag.playMusic = append(ag.playMusic, ag.music...)
 
-	return ag.musicChan
+	return ag.playMusic
 }
 
 func (ag *ActiveGuild) CleanUp() {
-	close(ag.musicChan)
+	var musicArr []*Music
+
 	ag.isStreaming = false
-	ag.event = nil
-	ag.musicChan = nil
+	ag.event = NewEvent()
+	ag.playMusic = musicArr
 }
