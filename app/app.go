@@ -21,13 +21,13 @@ var (
 func checkGuild(s *discordgo.Session, m *discordgo.MessageCreate) *util.ActiveGuild {
 
 	// Verify that a guild exists
-	activeGuild, ok := guilds[m.GuildID]
+	_, ok := guilds[m.GuildID]
 
 	if !ok {
-		activeGuild = util.NewActiveGuild(m.GuildID)
+		guilds[m.GuildID] = util.NewActiveGuild(m.GuildID)
 	}
 
-	return activeGuild
+	return guilds[m.GuildID]
 
 }
 
@@ -47,17 +47,29 @@ func messageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	switch {
 	case strings.EqualFold(content[1], commands[Play]):
-		// Play(s, m, content[2])
+		if !activeGuild.GetStreamingState() {
+			commandHandler.StreamingPlayAndPrepar(s, m, activeGuild)
+		} else {
+			s.ChannelMessageSend(m.ChannelID, ":exclamation: It's already streaming.")
+		}
 	case strings.EqualFold(content[1], commands[Add]):
 		commandHandler.Add(s, m, activeGuild, content[2])
 	case strings.EqualFold(content[1], commands[View]):
 		commandHandler.View(s, m, activeGuild)
 	case strings.EqualFold(content[1], commands[Delete]):
 		commandHandler.Delete(s, m, activeGuild, content[2])
-	case strings.EqualFold(content[1], commands[Stop]):
-		commandHandler.Stop(s, m, activeGuild)
+	case strings.EqualFold(content[1], commands[Exit]):
+		if activeGuild.GetStreamingState() {
+			commandHandler.Stop(s, m, activeGuild)
+		} else {
+			s.ChannelMessageSend(m.ChannelID, ":exclamation: It's not streaming right now!")
+		}
 	case strings.EqualFold(content[1], commands[Skip]):
-		commandHandler.Skip(s, m, activeGuild)
+		if activeGuild.GetStreamingState() {
+			commandHandler.Skip(s, m, activeGuild)
+		} else {
+			s.ChannelMessageSend(m.ChannelID, ":exclamation: It's not streaming right now!")
+		}
 	case strings.EqualFold(content[1], commands[Search]):
 		searchText := ""
 		for _, v := range content[2:] {
@@ -65,11 +77,8 @@ func messageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 		commandHandler.Search(s, m, searchText)
 	default:
-		s.ChannelMessageSend(m.ChannelID, "Not Found command!")
+		s.ChannelMessageSend(m.ChannelID, ":x: Not Found command!")
 	}
-
-	return
-
 }
 
 func NewDiscord() *discordgo.Session {

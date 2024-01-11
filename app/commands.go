@@ -15,7 +15,7 @@ import (
 const (
 	Search = "search"
 	Play   = "play"
-	Stop   = "stop"
+	Exit   = "exit"
 	Skip   = "skip"
 	Delete = "delete"
 	Add    = "add"
@@ -33,7 +33,7 @@ func NewCommandHandler() *CommandHandler {
 
 	commands[Search] = Search
 	commands[Play] = Play
-	commands[Stop] = Stop
+	commands[Exit] = Exit
 	commands[Skip] = Skip
 	commands[Delete] = Delete
 	commands[View] = View
@@ -76,6 +76,11 @@ func (h *CommandHandler) Add(s *discordgo.Session, m *discordgo.MessageCreate, a
 		return
 	}
 
+	if ag.MusicIsFulling() {
+		s.ChannelMessageSend(m.ChannelID, ":exclamation: Your playlist is full.")
+		return
+	}
+
 	text := ""
 	data, err := h.youtube.SearchToIdOrURLHandle(musicId)
 
@@ -91,40 +96,28 @@ func (h *CommandHandler) Add(s *discordgo.Session, m *discordgo.MessageCreate, a
 	title := music.GetTitle()
 	videoId := music.GetId()
 
+	text += ":green_circle: Added to the playlist.\n\n"
 	text += "Title: " + title + "\n"
 	text += "Video ID: " + videoId + "\n"
-	text += "Video URL: " + "https://www.youtube.com/watch?v=" + videoId + "\n\n" + "The video has been added."
+	text += "Video URL: " + "https://www.youtube.com/watch?v=" + videoId + "\n"
 
 	s.ChannelMessageSend(m.ChannelID, text)
 }
 
 func (h *CommandHandler) View(s *discordgo.Session, m *discordgo.MessageCreate, ag *util.ActiveGuild) {
+
 	text := ""
 	music := ag.GetMusic()
-
 	text += ":memo: Current Playlist\n\n"
 
-	for _, item := range music {
-		title := item.GetTitle()
-		videoId := item.GetId()
+	text = checkMusicList(music, text)
 
-		text += "Title: " + title + "\n"
-		text += "Video ID: " + videoId + "\n"
-	}
-
+	playMusic := ag.GetPlayMusic()
 	text += ":musical_notes: Playlist being played\n\n"
-	musicChan := ag.GetMusicChan()
 
-	for item := range musicChan {
-		title := item.GetTitle()
-		videoId := item.GetId()
-
-		text += "Title: " + title + "\n"
-		text += "Video ID: " + videoId + "\n"
-	}
+	text = checkMusicList(playMusic, text)
 
 	s.ChannelMessageSend(m.ChannelID, text)
-
 }
 
 func (h *CommandHandler) Delete(s *discordgo.Session, m *discordgo.MessageCreate, ag *util.ActiveGuild, musicId string) {
@@ -144,18 +137,14 @@ func (h *CommandHandler) Delete(s *discordgo.Session, m *discordgo.MessageCreate
 		return
 	}
 
+	text += ":green_circle: Update Complete.\n\n"
+
 	music = ag.DeleteMusic(findIndex)
 	text += ":memo: Current Playlist\n\n"
 
-	for _, item := range music {
-		title := item.GetTitle()
-		videoId := item.GetId()
+	text = checkMusicList(music, text)
 
-		text += "Title: " + title + "\n"
-		text += "Video ID: " + videoId + "\n"
-	}
-
-	s.ChannelMessageSend(m.ChannelID, "Update Complete.")
+	s.ChannelMessageSend(m.ChannelID, text)
 
 }
 
@@ -188,14 +177,15 @@ func (h *CommandHandler) StreamingPlayAndPrepar(s *discordgo.Session, m *discord
 		ag.CleanUp()
 	}()
 
-	musicChan := ag.PreparStreaming()
-	for item := range musicChan {
+	playMusic := ag.PreparStreaming()
+	for _, item := range playMusic {
+
 		if !vc.Ready {
 			VoiceJoinErr(s, m)
 			return
 		}
 
-		if !ag.GetEvent().GetStopState() {
+		if !ag.GetEvent().GetExitState() {
 			h.play(s, m, ag, vc, item)
 		}
 
@@ -206,9 +196,10 @@ func (h *CommandHandler) StreamingPlayAndPrepar(s *discordgo.Session, m *discord
 
 func (h *CommandHandler) play(s *discordgo.Session, m *discordgo.MessageCreate, ag *util.ActiveGuild, vc *discordgo.VoiceConnection, music *util.Music) {
 
+	log.Println(music.GetStreamUrl())
+
 	client := ytDownload.Client{}
-	video, err := client.GetVideo(music.GetId())
-	defer video.delete()
+	video, err := client.GetVideo(music.GetStreamUrl())
 
 	if err != nil {
 		log.Println("Error getting video info:", err)
@@ -218,6 +209,7 @@ func (h *CommandHandler) play(s *discordgo.Session, m *discordgo.MessageCreate, 
 	// Get Stream
 	formats := video.Formats.WithAudioChannels().FindByQuality("medium")
 	stream, err := client.GetStreamURL(video, formats)
+
 	if err != nil {
 		log.Println("Error getting video stream Url :", err)
 		return
@@ -233,26 +225,49 @@ func (h *CommandHandler) play(s *discordgo.Session, m *discordgo.MessageCreate, 
 	// Encode
 	encodeSession, err := dca.EncodeFile(stream, options)
 	if err != nil {
+		log.Println("Encode Error")
 		return
 	}
 	defer encodeSession.Cleanup()
 
 	// Encode Session Delay
-	time.Sleep(500 * time.Millisecond)
+	time.Sleep(time.Second)
 
 	done := make(chan error)
 	dca.NewStream(encodeSession, vc, done)
 	defer encodeSession.Stop()
 
-	// Todo : Session Code Debug
 	select {
 	case err := <-done:
 		if err != nil && err != io.EOF {
+			text := ":+1: The " + music.GetTitle() + " music has ended."
+			s.ChannelMessageSend(m.ChannelID, text)
 			return
 		}
 	case <-ag.GetEvent().GetSkipEvent():
-	case <-ag.GetEvent().GetStopEvent():
+		text := ":exclamation: The " + music.GetTitle() + " has been skipped."
+		s.ChannelMessageSend(m.ChannelID, text)
+		return
+	case <-ag.GetEvent().GetExitEvent():
+		text := ":exclamation: Playlist has been forced to exit."
+		s.ChannelMessageSend(m.ChannelID, text)
+		return
+	}
+}
+
+func checkMusicList(music []*util.Music, text string) string {
+
+	if len(music) == 0 {
+		text += ":x: Music does not exist.\n\n"
+	} else {
+		for _, item := range music {
+			title := item.GetTitle()
+			videoId := item.GetId()
+
+			text += "Title: " + title + "\n"
+			text += "Video ID: " + videoId + "\n\n"
+		}
 	}
 
-	return
+	return text
 }
