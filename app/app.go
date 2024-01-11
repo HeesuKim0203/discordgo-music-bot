@@ -53,6 +53,7 @@ func messageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 	case strings.EqualFold(content[1], commands[View]):
 		commandHandler.View(s, m, activeGuild)
 	case strings.EqualFold(content[1], commands[Delete]):
+		commandHandler.Delete(s, m, activeGuild, content[2])
 	case strings.EqualFold(content[1], commands[Stop]):
 		commandHandler.Stop(s, m, activeGuild)
 	case strings.EqualFold(content[1], commands[Skip]):
@@ -64,8 +65,10 @@ func messageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 		commandHandler.Search(s, m, searchText)
 	default:
-		s.ChannelMessageSend(m.ChannelID, "Not Found Command!")
+		s.ChannelMessageSend(m.ChannelID, "Not Found command!")
 	}
+
+	return
 
 }
 

@@ -183,20 +183,22 @@ func (h *CommandHandler) StreamingPlayAndPrepar(s *discordgo.Session, m *discord
 	}
 	defer vc.Speaking(false)
 
-	musicChan := ag.PreparStreaming()
+	ag.SetStreamingState(true)
+	defer func() {
+		ag.CleanUp()
+	}()
 
+	musicChan := ag.PreparStreaming()
 	for item := range musicChan {
 		if !vc.Ready {
 			VoiceJoinErr(s, m)
 			return
 		}
 
-		// Todo : Data Channel -> Boolean update
-		if ag.GetEvent().GetStopEvent() {
-			break
+		if !ag.GetEvent().GetStopState() {
+			h.play(s, m, ag, vc, item)
 		}
 
-		h.play(s, m, ag, vc, item)
 		// Music Delay
 		time.Sleep(time.Second)
 	}
