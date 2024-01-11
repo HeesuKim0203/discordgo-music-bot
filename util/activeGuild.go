@@ -29,15 +29,11 @@ func NewActiveGuild(id string) *ActiveGuild {
 	}
 }
 
-func (ag *ActiveGuild) CheckExistenceMusicQueue() bool {
-	return !(len(ag.playMusic) == 0)
+func (ag *ActiveGuild) MusicIsFulling() bool {
+	return len(ag.music) >= ag.maxSize
 }
 
-func (ag *ActiveGuild) GetPlayMusicSize() int {
-	return len(ag.playMusic)
-}
-
-func (ag *ActiveGuild) GetStreamingState(isStreaming bool) bool {
+func (ag *ActiveGuild) GetStreamingState() bool {
 	return ag.isStreaming
 }
 
@@ -59,11 +55,6 @@ func (ag *ActiveGuild) GetMusic() []*Music {
 }
 
 func (ag *ActiveGuild) AddMusic(music *Music) {
-
-	if len(ag.music) >= 10 {
-		return
-	}
-
 	ag.music = append(ag.music, music)
 }
 

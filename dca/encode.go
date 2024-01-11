@@ -103,11 +103,11 @@ func (e *EncodeSession) run() {
 	}
 
 	args := []string{
-		"-i", inputFile,
 		"-reconnect", "1",
 		"-reconnect_at_eof", "1",
 		"-reconnect_streamed", "1",
 		"-reconnect_delay_max", "2",
+		"-i", inputFile,
 		"-map", "0:a",
 		"-acodec", "libopus",
 		"-f", "ogg",
@@ -273,7 +273,6 @@ func (e *EncodeSession) ReadFrame() (frame []byte, err error) {
 func (e *EncodeSession) OpusFrame() (frame []byte, err error) {
 	f := <-e.frameChannel
 	if f == nil {
-		log.Println("OpusFrame io.EOF")
 		return nil, io.EOF
 	}
 

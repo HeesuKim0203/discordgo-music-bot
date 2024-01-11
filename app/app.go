@@ -47,17 +47,29 @@ func messageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	switch {
 	case strings.EqualFold(content[1], commands[Play]):
-		commandHandler.StreamingPlayAndPrepar(s, m, activeGuild)
+		if !activeGuild.GetStreamingState() {
+			commandHandler.StreamingPlayAndPrepar(s, m, activeGuild)
+		} else {
+			s.ChannelMessageSend(m.ChannelID, ":exclamation: It's already streaming.")
+		}
 	case strings.EqualFold(content[1], commands[Add]):
 		commandHandler.Add(s, m, activeGuild, content[2])
 	case strings.EqualFold(content[1], commands[View]):
 		commandHandler.View(s, m, activeGuild)
 	case strings.EqualFold(content[1], commands[Delete]):
 		commandHandler.Delete(s, m, activeGuild, content[2])
-	case strings.EqualFold(content[1], commands[Stop]):
-		commandHandler.Stop(s, m, activeGuild)
+	case strings.EqualFold(content[1], commands[Exit]):
+		if activeGuild.GetStreamingState() {
+			commandHandler.Stop(s, m, activeGuild)
+		} else {
+			s.ChannelMessageSend(m.ChannelID, ":exclamation: It's not streaming right now!")
+		}
 	case strings.EqualFold(content[1], commands[Skip]):
-		commandHandler.Skip(s, m, activeGuild)
+		if activeGuild.GetStreamingState() {
+			commandHandler.Skip(s, m, activeGuild)
+		} else {
+			s.ChannelMessageSend(m.ChannelID, ":exclamation: It's not streaming right now!")
+		}
 	case strings.EqualFold(content[1], commands[Search]):
 		searchText := ""
 		for _, v := range content[2:] {

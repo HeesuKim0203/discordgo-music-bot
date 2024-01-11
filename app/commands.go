@@ -15,7 +15,7 @@ import (
 const (
 	Search = "search"
 	Play   = "play"
-	Stop   = "stop"
+	Exit   = "exit"
 	Skip   = "skip"
 	Delete = "delete"
 	Add    = "add"
@@ -33,7 +33,7 @@ func NewCommandHandler() *CommandHandler {
 
 	commands[Search] = Search
 	commands[Play] = Play
-	commands[Stop] = Stop
+	commands[Exit] = Exit
 	commands[Skip] = Skip
 	commands[Delete] = Delete
 	commands[View] = View
@@ -76,6 +76,11 @@ func (h *CommandHandler) Add(s *discordgo.Session, m *discordgo.MessageCreate, a
 		return
 	}
 
+	if ag.MusicIsFulling() {
+		s.ChannelMessageSend(m.ChannelID, ":exclamation: Your playlist is full.")
+		return
+	}
+
 	text := ""
 	data, err := h.youtube.SearchToIdOrURLHandle(musicId)
 
@@ -91,7 +96,7 @@ func (h *CommandHandler) Add(s *discordgo.Session, m *discordgo.MessageCreate, a
 	title := music.GetTitle()
 	videoId := music.GetId()
 
-	text += ":green_circle: The video has been added.\n\n"
+	text += ":green_circle: Added to the playlist.\n\n"
 	text += "Title: " + title + "\n"
 	text += "Video ID: " + videoId + "\n"
 	text += "Video URL: " + "https://www.youtube.com/watch?v=" + videoId + "\n"
@@ -103,12 +108,12 @@ func (h *CommandHandler) View(s *discordgo.Session, m *discordgo.MessageCreate, 
 
 	text := ""
 	music := ag.GetMusic()
-	text += "\n:memo: Current Playlist\n\n"
+	text += ":memo: Current Playlist\n\n"
 
 	text = checkMusicList(music, text)
 
 	playMusic := ag.GetPlayMusic()
-	text += "\n:musical_notes: Playlist being played\n\n"
+	text += ":musical_notes: Playlist being played\n\n"
 
 	text = checkMusicList(playMusic, text)
 
@@ -153,8 +158,6 @@ func (h *CommandHandler) Skip(s *discordgo.Session, m *discordgo.MessageCreate, 
 
 func (h *CommandHandler) StreamingPlayAndPrepar(s *discordgo.Session, m *discordgo.MessageCreate, ag *util.ActiveGuild) {
 
-	log.Println("Play")
-
 	vc, err := s.ChannelVoiceJoin(m.GuildID, m.ChannelID, false, true)
 	if err != nil {
 		VoiceJoinErr(s, m)
@@ -177,22 +180,18 @@ func (h *CommandHandler) StreamingPlayAndPrepar(s *discordgo.Session, m *discord
 	playMusic := ag.PreparStreaming()
 	for _, item := range playMusic {
 
-		log.Println("item", item)
-
 		if !vc.Ready {
 			VoiceJoinErr(s, m)
 			return
 		}
 
-		if !ag.GetEvent().GetStopState() {
+		if !ag.GetEvent().GetExitState() {
 			h.play(s, m, ag, vc, item)
 		}
 
 		// Music Delay
 		time.Sleep(time.Second)
 	}
-
-	log.Println("End")
 }
 
 func (h *CommandHandler) play(s *discordgo.Session, m *discordgo.MessageCreate, ag *util.ActiveGuild, vc *discordgo.VoiceConnection, music *util.Music) {
@@ -210,6 +209,7 @@ func (h *CommandHandler) play(s *discordgo.Session, m *discordgo.MessageCreate, 
 	// Get Stream
 	formats := video.Formats.WithAudioChannels().FindByQuality("medium")
 	stream, err := client.GetStreamURL(video, formats)
+
 	if err != nil {
 		log.Println("Error getting video stream Url :", err)
 		return
@@ -231,24 +231,26 @@ func (h *CommandHandler) play(s *discordgo.Session, m *discordgo.MessageCreate, 
 	defer encodeSession.Cleanup()
 
 	// Encode Session Delay
-	time.Sleep(500 * time.Millisecond)
+	time.Sleep(time.Second)
 
 	done := make(chan error)
 	dca.NewStream(encodeSession, vc, done)
 	defer encodeSession.Stop()
 
-	// Todo : Session Code Debug
 	select {
 	case err := <-done:
 		if err != nil && err != io.EOF {
-			log.Println("EOF")
+			text := ":+1: The " + music.GetTitle() + " music has ended."
+			s.ChannelMessageSend(m.ChannelID, text)
 			return
 		}
 	case <-ag.GetEvent().GetSkipEvent():
-		log.Println("GetSkipEvent")
+		text := ":exclamation: The " + music.GetTitle() + " has been skipped."
+		s.ChannelMessageSend(m.ChannelID, text)
 		return
-	case <-ag.GetEvent().GetStopEvent():
-		log.Println("GetStopEvent")
+	case <-ag.GetEvent().GetExitEvent():
+		text := ":exclamation: Playlist has been forced to exit."
+		s.ChannelMessageSend(m.ChannelID, text)
 		return
 	}
 }
@@ -256,14 +258,14 @@ func (h *CommandHandler) play(s *discordgo.Session, m *discordgo.MessageCreate, 
 func checkMusicList(music []*util.Music, text string) string {
 
 	if len(music) == 0 {
-		text += ":x: Music does not exist.\n"
+		text += ":x: Music does not exist.\n\n"
 	} else {
 		for _, item := range music {
 			title := item.GetTitle()
 			videoId := item.GetId()
 
 			text += "Title: " + title + "\n"
-			text += "Video ID: " + videoId + "\n"
+			text += "Video ID: " + videoId + "\n\n"
 		}
 	}
 

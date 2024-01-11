@@ -72,7 +72,7 @@ func init() {
 	} else {
 		fmt.Println("Not found in .env file the 'BOT_NAME'!")
 		fmt.Println("Use the default for 'BOT_NAME'.")
-		c.botName = "GoBot"
+		c.botName = "!music"
 	}
 
 	searchListMax, err := strconv.Atoi(os.Getenv("MAX_MUSIC_SEARCH_LIST"))
