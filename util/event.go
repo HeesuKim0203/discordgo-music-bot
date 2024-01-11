@@ -3,6 +3,8 @@ package util
 type Event struct {
 	skipEvent chan bool // True : when a Skip event occurs
 	stopEvent chan bool // True : when a Stop event occurs
+
+	stopped bool
 }
 
 func NewEvent() *Event {
@@ -17,6 +19,7 @@ func (e *Event) Skip() {
 }
 
 func (e *Event) Stop() {
+	e.stopped = true
 	e.stopEvent <- true
 }
 
@@ -26,4 +29,8 @@ func (e *Event) GetSkipEvent() chan bool {
 
 func (e *Event) GetStopEvent() chan bool {
 	return e.stopEvent
+}
+
+func (e *Event) GetStopState() bool {
+	return e.stopped
 }

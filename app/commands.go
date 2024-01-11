@@ -50,7 +50,7 @@ func NewCommandHandler() *CommandHandler {
 func (h *CommandHandler) Search(s *discordgo.Session, m *discordgo.MessageCreate, searchText string) {
 
 	if searchText == "" {
-		s.ChannelMessageSend(m.ChannelID, "No text. Please enter text.")
+		NoTextErr(s, m)
 		return
 	}
 
@@ -72,7 +72,7 @@ func (h *CommandHandler) Search(s *discordgo.Session, m *discordgo.MessageCreate
 func (h *CommandHandler) Add(s *discordgo.Session, m *discordgo.MessageCreate, ag *util.ActiveGuild, musicId string) {
 
 	if musicId == "" {
-		s.ChannelMessageSend(m.ChannelID, "No text. Please enter text.")
+		NoTextErr(s, m)
 		return
 	}
 
@@ -80,7 +80,7 @@ func (h *CommandHandler) Add(s *discordgo.Session, m *discordgo.MessageCreate, a
 	data, err := h.youtube.SearchToIdOrURLHandle(musicId)
 
 	if err != nil {
-		s.ChannelMessageSend(m.ChannelID, "Please enter a valid ID. Search failed.")
+		SearchFailErr(s, m)
 		return
 	}
 
@@ -102,7 +102,7 @@ func (h *CommandHandler) View(s *discordgo.Session, m *discordgo.MessageCreate, 
 	text := ""
 	music := ag.GetMusic()
 
-	text += ":memo:Current Playlist\n\n"
+	text += ":memo: Current Playlist\n\n"
 
 	for _, item := range music {
 		title := item.GetTitle()
@@ -112,7 +112,7 @@ func (h *CommandHandler) View(s *discordgo.Session, m *discordgo.MessageCreate, 
 		text += "Video ID: " + videoId + "\n"
 	}
 
-	text += ":musical_notes:Playlist being played\n\n"
+	text += ":musical_notes: Playlist being played\n\n"
 	musicChan := ag.GetMusicChan()
 
 	for item := range musicChan {
@@ -140,12 +140,12 @@ func (h *CommandHandler) Delete(s *discordgo.Session, m *discordgo.MessageCreate
 	}
 
 	if findIndex == -1 {
-		s.ChannelMessageSend(m.ChannelID, "Please enter a valid ID. Search failed.")
+		SearchFailErr(s, m)
 		return
 	}
 
 	music = ag.DeleteMusic(findIndex)
-	text += ":memo:Current Playlist\n\n"
+	text += ":memo: Current Playlist\n\n"
 
 	for _, item := range music {
 		title := item.GetTitle()
@@ -171,31 +171,34 @@ func (h *CommandHandler) StreamingPlayAndPrepar(s *discordgo.Session, m *discord
 
 	vc, err := s.ChannelVoiceJoin(m.GuildID, m.ChannelID, false, true)
 	if err != nil {
-		voiceJoinErr(s, m)
+		VoiceJoinErr(s, m)
 		return
 	}
 	defer vc.Disconnect()
 
 	err = vc.Speaking(true)
 	if err != nil {
-		voiceJoinErr(s, m)
+		VoiceJoinErr(s, m)
 		return
 	}
 	defer vc.Speaking(false)
 
-	musicChan := ag.PreparStreaming()
+	ag.SetStreamingState(true)
+	defer func() {
+		ag.CleanUp()
+	}()
 
+	musicChan := ag.PreparStreaming()
 	for item := range musicChan {
 		if !vc.Ready {
-			voiceJoinErr(s, m)
+			VoiceJoinErr(s, m)
 			return
 		}
 
-		if ag.GetEvent().GetStopEvent() {
-
+		if !ag.GetEvent().GetStopState() {
+			h.play(s, m, ag, vc, item)
 		}
 
-		h.play(s, m, ag, vc, item)
 		// Music Delay
 		time.Sleep(time.Second)
 	}
@@ -248,9 +251,7 @@ func (h *CommandHandler) play(s *discordgo.Session, m *discordgo.MessageCreate, 
 			return
 		}
 	case <-ag.GetEvent().GetSkipEvent():
-		return
 	case <-ag.GetEvent().GetStopEvent():
-		return
 	}
 
 	return
