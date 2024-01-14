@@ -15,5 +15,4 @@ ENV APP_HOME=/app
 WORKDIR ${APP_HOME}
 RUN apk --update add --no-cache ca-certificates ffmpeg opus
 COPY --from=builder /app/bin/discordgo-music-bot ./bin/discordgo-music-bot
-RUN yt-dlp --version
 ENTRYPOINT ["/app/bin/discordgo-music-bot"]
