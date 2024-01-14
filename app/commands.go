@@ -20,6 +20,7 @@ const (
 	Delete = "delete"
 	Add    = "add"
 	View   = "view"
+	Help   = "help"
 )
 
 type CommandHandler struct {
@@ -38,6 +39,7 @@ func NewCommandHandler() *CommandHandler {
 	commands[Delete] = Delete
 	commands[View] = View
 	commands[Add] = Add
+	commands[Help] = Help
 
 	commandHandler := &CommandHandler{
 		youtube:  youtube.NewService(),
