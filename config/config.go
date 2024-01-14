@@ -23,8 +23,8 @@ func init() {
 	env, err := godotenv.Read("./.env")
 
 	if err != nil {
-		fmt.Printf("Not found .env File : ")
-		fmt.Printf("It fetches the specified environment variables, not from the .env file.")
+		fmt.Println("Not found .env File!")
+		fmt.Println("It fetches the specified environment variables, not from the .env file.")
 		specifiedEnv()
 	} else {
 		envFile(env)
@@ -103,7 +103,7 @@ func specifiedEnv() {
 	if discrodToken != "" {
 		c.discordToken = discrodToken
 	} else {
-		panic("Not found in .env file the 'DISCORD_PUBLIC_KEY'!")
+		panic("Not found the 'DISCORD_PUBLIC_KEY'!")
 	}
 
 	youtubeToken := os.Getenv("YOUTUBE_PUBLIC_KEY")
@@ -111,13 +111,13 @@ func specifiedEnv() {
 	if youtubeToken != "" {
 		c.youtubeToken = youtubeToken
 	} else {
-		panic("Not found in .env file the 'YOUTUBE_PUBLIC_KEY'!")
+		panic("Not found the 'YOUTUBE_PUBLIC_KEY'!")
 	}
 
 	queueSize, err := strconv.Atoi(os.Getenv("MUSIC_QUEUE_SIZE"))
 
 	if err != nil {
-		fmt.Println("Not correct format in .env file the 'MUSIC_QUEUE_SIZE'!")
+		fmt.Println("Not correct format the 'MUSIC_QUEUE_SIZE'!")
 		fmt.Println("Use the default for 'MUSIC_QUUE_SIZE'.")
 		c.queueSize = 10
 	} else {
@@ -127,7 +127,7 @@ func specifiedEnv() {
 	musicDuration, err := strconv.Atoi(os.Getenv("MUSIC_DURATION"))
 
 	if err != nil {
-		fmt.Println("Not correct format in .env file the 'MUSIC_DURATION'!")
+		fmt.Println("Not correct format the 'MUSIC_DURATION'!")
 		fmt.Println("Use the default for 'MUSIC_DURATION'.")
 		c.musicDuration = 480
 	} else {
@@ -139,7 +139,7 @@ func specifiedEnv() {
 	if botName != "" {
 		c.botName = botName
 	} else {
-		fmt.Println("Not found in .env file the 'BOT_NAME'!")
+		fmt.Println("Not found the 'BOT_NAME'!")
 		fmt.Println("Use the default for 'BOT_NAME'.")
 		c.botName = "!music"
 	}
@@ -147,7 +147,7 @@ func specifiedEnv() {
 	searchListMax, err := strconv.Atoi(os.Getenv("MAX_MUSIC_SEARCH_LIST"))
 
 	if err != nil {
-		fmt.Println("Not correct format in .env file the 'MAX_MUSIC_SEARCH_LIST'!")
+		fmt.Println("Not correct format the 'MAX_MUSIC_SEARCH_LIST'!")
 		fmt.Println("Use the default for 'MAX_MUSIC_SEARCH_LIST'.")
 		c.searchListMax = 5
 	} else {

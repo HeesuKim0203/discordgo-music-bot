@@ -40,3 +40,17 @@ You must use it with the commands set in the ```BOT_NAME``` mentioned above.
 |skip|Skips one song.|
 |help|Provides a manual for the commands.|
 
+## Docker Hub
+
+The image file is provided on [Docker hub](https://hub.docker.com/repository/docker/heesu998/discordgo-music-bot/general)!  
+After pulling it, you can use it by entering the commands in order.
+
+#### Pull docker image
+```
+docker pull heesu998/discordgo-music-bot
+```
+
+#### Running a container
+```
+sudo docker run -e DISCORD_PUBLIC_KEY=[your_public_key] -e YOUTUBE_PUBLIC_KEY=[your_public_key] --name [container name] heesu998/discordgo-music-bot
+```
