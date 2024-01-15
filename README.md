@@ -1,5 +1,7 @@
 # Music bot
 
+![discordgo-music-bot workflow](https://github.com/HeesuKim0203/discordgo-music-bot/actions/workflows/main.yml/badge.svg) ![discordgo-music-bot docker hub](https://img.shields.io/docker/pulls/heesu998/discordgo-music-bot)
+
 Discord Bot Using Go
 
 ## ENV
