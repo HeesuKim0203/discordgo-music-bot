@@ -44,7 +44,7 @@ You must use it with the commands set in the ```BOT_NAME``` mentioned above.
 
 ## Docker Hub
 
-The image file is provided on [Docker hub](https://hub.docker.com/repository/docker/heesu998/discordgo-music-bot/general)!  
+The image file is provided on [Docker hub](https://hub.docker.com/r/heesu998/discordgo-music-bot)!  
 After pulling it, you can use it by entering the commands in order.
 
 #### Pull docker image
