@@ -37,7 +37,7 @@ You must use it with the commands set in the ```BOT_NAME``` mentioned above.
 |add|Adds a song to the playlist. You need to enter the song's id. The id of the song can be found in the search results.|
 |delete|Deletes a song from the playlist. You must enter the id of the song you want to delete.|
 |view|Displays the current playlist and the songs playing in the streaming playlist.|
-|play|Streams the current playlist. The streaming playlist cannot be changed.|
+|play|Streams the current playlist. The streaming playlist cannot be changed. You need to enter a command in the voice chat room. :exclamation: |
 |exit|Deletes all songs in the currently streaming playlist.|
 |skip|Skips one song.|
 |help|Provides a manual for the commands.|
